@@ -8,7 +8,7 @@ function normalizarConsulta(string $texto): array {
     return $m[0] ?? [];
 }
 function pesoTf(int $frecuencia): float {
-    return $frecuencia > 0 ? 1.0 + log($frecuencia) : 0.0;
+    return $frecuencia > 0 ? $frecuencia : 0.0;
 }
 
 $consultaOriginal = trim((string)($_GET['q'] ?? ''));
@@ -36,8 +36,11 @@ if ($consultaOriginal === '' || !$terminosConsulta) {
     foreach ($filas as $fila) {
         $token = $fila['token'];
         $docId = (int)$fila['id_documento'];
+        // Smooth IDF, so that the application doesn't skip documents that match the query but have a weight of 0.
         $idf[$token] = log(($N + 1) / ((int)$fila['df'] + 1)) + 1.0;
+        // Removed log from pesoTF calculation
         $vectores[$docId][$token] = pesoTf((int)$fila['frecuencia']) * $idf[$token];
+        //echo "<script>console.log(" . json_encode(pesoTf((int)$fila['frecuencia'])) . ");</script>";
         $metadatos[$docId] = [
             'archivo' => $fila['archivo'],
             'url' => $fila['url']
