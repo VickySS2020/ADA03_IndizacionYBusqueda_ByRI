@@ -36,15 +36,22 @@ if ($consultaOriginal === '' || !$terminosConsulta) {
     foreach ($filas as $fila) {
         $token = $fila['token'];
         $docId = (int)$fila['id_documento'];
-        // Smooth IDF, so that the application doesn't skip documents that match the query but have a weight of 0.
+        // Smooth IDF, para que la aplicación no se salte documentos que cumplen la consulta pero tienen un peso de 0.
         $idf[$token] = log(($N + 1) / ((int)$fila['df'] + 1)) + 1.0;
-        // Removed log from pesoTF calculation
+        // Calcular peso TF-IDF. Se removió log del cálculo de pesoTF.
         $vectores[$docId][$token] = pesoTf((int)$fila['frecuencia']) * $idf[$token];
         //echo "<script>console.log(" . json_encode(pesoTf((int)$fila['frecuencia'])) . ");</script>";
-        $metadatos[$docId] = [
-            'archivo' => $fila['archivo'],
-            'url' => $fila['url']
-        ];
+        
+        // Inicializar los metadatos únicamente si el documento no existe.
+        if (!isset($metadatos[$docId])) {
+            $metadatos[$docId] = [
+                'archivo' => $fila['archivo'],
+                'url' => $fila['url'],
+                'fragmentos' => []
+            ];
+        }
+
+        // Guardar los fragmentos correspondientes a los términos buscados.
         if (isset($qtf[$token])) {
             $metadatos[$docId]['fragmentos'][$token] = $fila['fragmento'];
         }
@@ -95,7 +102,7 @@ if ($consultaOriginal === '' || !$terminosConsulta) {
 <article class="resultado">
   <h2><a href="descargar.php?archivo=<?= rawurlencode(basename($r['url'])) ?>"><?= htmlspecialchars($r['archivo'], ENT_QUOTES, 'UTF-8') ?></a></h2>
   <p><strong>Similitud Coseno:</strong> <?= number_format($r['coseno'], 6) ?></p>
-  <p><strong>Fragmento:</strong> <?= htmlspecialchars($r['fragmento'], ENT_QUOTES, 'UTF-8') ?></p>
+  <p><strong>Fragmento:</strong> <?= htmlspecialchars($r['fragmento'], ENT_QUOTES, 'UTF-8') ?>...</p>
   <a href="descargar.php?archivo=<?= rawurlencode(basename($r['url'])) ?>">Descargar archivo</a>
 </article>
 <?php endforeach; ?>
