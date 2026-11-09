@@ -37,10 +37,9 @@ if ($consultaOriginal === '' || !$terminosConsulta) {
         $token = $fila['token'];
         $docId = (int)$fila['id_documento'];
         // Smooth IDF, para que la aplicación no se salte documentos que cumplen la consulta pero tienen un peso de 0.
-        $idf[$token] = log(($N + 1) / ((int)$fila['df'] + 1)) + 1.0;
+        $idf[$token] = log(($N + 1) / ((int)$fila['df'] + 1), 10) + 1.0;
         // Calcular peso TF-IDF. Se removió log del cálculo de pesoTF.
         $vectores[$docId][$token] = pesoTf((int)$fila['frecuencia']) * $idf[$token];
-        //echo "<script>console.log(" . json_encode(pesoTf((int)$fila['frecuencia'])) . ");</script>";
         
         // Inicializar los metadatos únicamente si el documento no existe.
         if (!isset($metadatos[$docId])) {
